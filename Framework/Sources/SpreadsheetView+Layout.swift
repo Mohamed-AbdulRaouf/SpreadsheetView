@@ -8,6 +8,10 @@
 
 import UIKit
 
+enum MerrgedCellErrors: Error {
+    case mergedCell
+}
+
 extension SpreadsheetView {
     public override func layoutSubviews() {
         super.layoutSubviews()
@@ -146,7 +150,7 @@ extension SpreadsheetView {
                                 insets: .zero)
     }
 
-    func resetLayoutProperties() -> LayoutProperties {
+    func resetLayoutProperties() throws -> LayoutProperties {
         guard let dataSource = dataSource else {
             return LayoutProperties()
         }
@@ -158,30 +162,30 @@ extension SpreadsheetView {
         let frozenRows = dataSource.frozenRows(in: self)
 
         guard numberOfColumns >= 0 else {
-            fatalError("`numberOfColumns(in:)` must return a value greater than or equal to 0")
+            throw MerrgedCellErrors.mergedCell
         }
         guard numberOfRows >= 0 else {
-            fatalError("`numberOfRows(in:)` must return a value greater than or equal to 0")
+            throw MerrgedCellErrors.mergedCell
         }
         guard frozenColumns <= numberOfColumns else {
-            fatalError("`frozenColumns(in:) must return a value less than or equal to `numberOfColumns(in:)`")
+            throw MerrgedCellErrors.mergedCell
         }
         guard frozenRows <= numberOfRows else {
-            fatalError("`frozenRows(in:) must return a value less than or equal to `numberOfRows(in:)`")
+            throw MerrgedCellErrors.mergedCell
         }
 
         let mergedCells = dataSource.mergedCells(in: self)
-        let mergedCellLayouts: [Location: CellRange] = { () in
+        let mergedCellLayouts: [Location: CellRange] = try { () in
             var layouts = [Location: CellRange]()
             for mergedCell in mergedCells {
                 if (mergedCell.from.column < frozenColumns && mergedCell.to.column >= frozenColumns) ||
                     (mergedCell.from.row < frozenRows && mergedCell.to.row >= frozenRows) {
-                    fatalError("cannot merge frozen and non-frozen column or rows")
+                    throw MerrgedCellErrors.mergedCell
                 }
                 for column in mergedCell.from.column...mergedCell.to.column {
                     for row in mergedCell.from.row...mergedCell.to.row {
                         guard column < numberOfColumns && row < numberOfRows else {
-                            fatalError("the range of `mergedCell` cannot exceed the total column or row count")
+                            throw MerrgedCellErrors.mergedCell
                         }
                         let location = Location(row: row, column: column)
                         if let existingMergedCell = layouts[location] {
@@ -191,7 +195,7 @@ extension SpreadsheetView {
                             if mergedCell.contains(existingMergedCell) {
                                 layouts[location] = nil
                             } else {
-                                fatalError("cannot merge cells in a range that overlap existing merged cells")
+                                throw MerrgedCellErrors.mergedCell
                             }
                         }
                         mergedCell.size = nil

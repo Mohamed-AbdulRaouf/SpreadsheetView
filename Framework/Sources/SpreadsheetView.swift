@@ -415,7 +415,8 @@ public class SpreadsheetView: UIView {
     }
 
     public func reloadData() {
-        layoutProperties = resetLayoutProperties()
+        do {
+        layoutProperties = try resetLayoutProperties()
         circularScrollScalingFactor = determineCircularScrollScalingFactor()
         centerOffset = calculateCenterOffset()
 
@@ -446,6 +447,9 @@ public class SpreadsheetView: UIView {
 
         needsReload = false
         setNeedsLayout()
+        } catch (let error) {
+            print(error.localizedDescription)
+        }
     }
 
     func reloadDataIfNeeded() {
