@@ -414,7 +414,7 @@ public class SpreadsheetView: UIView {
         cellNibs[identifier] = nib
     }
 
-    public func reloadData() {
+    public func reloadData() throws {
         do {
         layoutProperties = try resetLayoutProperties()
         circularScrollScalingFactor = determineCircularScrollScalingFactor()
@@ -449,12 +449,17 @@ public class SpreadsheetView: UIView {
         setNeedsLayout()
         } catch (let error) {
             print(error.localizedDescription)
+            throw(MerrgedCellErrors.mergedCell)
         }
     }
 
     func reloadDataIfNeeded() {
         if needsReload {
-            reloadData()
+            do{
+                try reloadData()
+            } catch let error{
+                print("error is ===> ", error.localizedDescription)
+            }
         }
     }
 
